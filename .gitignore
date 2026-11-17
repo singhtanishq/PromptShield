@@ -1,1 +1,72 @@
+# Private engineering directive — never commit, publish, or deploy.
 PromptShield.md
+
+# Private local working notes (environment details, internal checklists)
+local-notes.md
+notes/
+
+# Private prompt data — real user prompt content must never enter the repository
+private-prompts/
+*.prompt
+prompts-local/
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build artifacts
+dist/
+dist-ssr/
+build/
+.vite/
+*.tsbuildinfo
+
+# Test output & coverage
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Browser traces & screenshots generated during test runs (published screenshots live in docs/screenshots)
+screenshots-tmp/
+
+# Local environment files & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local databases / caches
+*.sqlite
+*.sqlite3
+*.db
+.cache/
+.eslintcache
+.turbo/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.log
+npm-debug.log*
+pnpm-debug.log*
+vite-dev.log*
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# Runtime state
+*.pid

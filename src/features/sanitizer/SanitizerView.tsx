@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { FlaskConical, ScanSearch, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { InputPanel } from './InputPanel';
 import { FindingsPanel } from './FindingsPanel';
 import { ScanControls } from './ScanControls';
+import { OutputPanel } from './OutputPanel';
+import { DiffView } from './DiffView';
 import type { Sensitivity } from './ScanControls';
-import { EmptyState } from '../../components/ui';
 
 /**
  * Primary workspace. Wide screens: input + findings left, output right.
@@ -48,43 +49,8 @@ export function SanitizerView() {
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <section
-            aria-labelledby="output-heading"
-            className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-panel"
-          >
-            <div className="border-b border-line bg-surface-2 px-4 py-2.5">
-              <h2 id="output-heading" className="text-sm font-semibold text-ink">
-                Sanitized output
-              </h2>
-              <p className="mt-0.5 text-2xs text-ink-faint">
-                Appears after you review findings and apply redactions.
-              </p>
-            </div>
-            <EmptyState
-              icon={<FlaskConical aria-hidden="true" />}
-              title="No sanitized output yet"
-              description="Redactions are never applied automatically. After you review findings and choose actions, the sanitized prompt appears here for copying or download."
-            />
-          </section>
-
-          <section
-            aria-labelledby="diff-heading"
-            className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-panel"
-          >
-            <div className="border-b border-line bg-surface-2 px-4 py-2.5">
-              <h2 id="diff-heading" className="text-sm font-semibold text-ink">
-                Before / after
-              </h2>
-              <p className="mt-0.5 text-2xs text-ink-faint">
-                Compare the original with the sanitized version.
-              </p>
-            </div>
-            <EmptyState
-              icon={<ScanSearch aria-hidden="true" />}
-              title="No diff yet"
-              description="The comparison view highlights exactly what was removed or replaced once redactions are applied."
-            />
-          </section>
+          <OutputPanel />
+          <DiffView />
         </div>
       </div>
     </div>

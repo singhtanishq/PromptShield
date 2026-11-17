@@ -2,7 +2,7 @@
   "name": "promptshield",
   "private": true,
   "version": "0.1.0",
-  "description": "Private AI Prompt Sanitizer — inspect, redact, and export safer prompts entirely in your browser.",
+  "description": "Private AI Prompt Sanitizer \u2014 inspect, redact, and export safer prompts entirely in your browser.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -53,5 +53,6 @@
     "typescript-eslint": "^8.18.1",
     "vite": "^6.0.7",
     "vitest": "^3.0.2"
-  }
+  },
+  "packageManager": "pnpm@12.18.0"
 }

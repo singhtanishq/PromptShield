@@ -5,6 +5,9 @@ import { Button, Panel, RadioCards, SelectInput, Switch } from '../../components
 import { ConfirmDialog } from '../../components/dialog';
 import { useToast } from '../../components/toast';
 import { useSession } from '../sanitizer/session';
+import { PRESETS } from '../../lib/rules/presets';
+import { CATEGORY_LABELS, DETECTOR_CATEGORIES } from '../../lib/detection/types';
+import type { DetectorCategory } from '../../lib/detection/types';
 
 /**
  * Detection & appearance settings. Only non-sensitive preferences are persisted
@@ -48,7 +51,61 @@ export function SettingsView() {
         </div>
       </Panel>
 
-      <Panel title="Scanning">
+      <Panel
+        title="Scanning presets & categories"
+        subtitle="Presets set categories and sensitivity together; toggles below mark the setup as Custom."
+      >
+        <div className="px-4 py-2">
+          <SelectInput
+            label="Preset"
+            value={settings.presetId}
+            onChange={(v) => {
+              const preset = PRESETS.find((p) => p.id === v);
+              if (preset !== undefined) {
+                update({
+                  presetId: preset.id,
+                  sensitivity: preset.sensitivity,
+                  categories: preset.categories,
+                });
+              }
+            }}
+            options={[
+              ...PRESETS.map((p) => ({ value: p.id, label: p.label })),
+              { value: 'custom', label: 'Custom' },
+            ]}
+            hint="Presets never modify your text — they only choose which detectors run and how sensitive they are."
+          />
+          <div className="py-2">
+            <p className="mb-1.5 text-sm font-medium text-ink">Detection categories</p>
+            <div className="divide-y divide-line rounded-lg border border-line bg-surface-2 px-4">
+              {DETECTOR_CATEGORIES.map((category: DetectorCategory) => (
+                <Switch
+                  key={category}
+                  label={CATEGORY_LABELS[category]}
+                  description={
+                    category === 'prompt-risk'
+                      ? 'Injection indicators and hidden characters — a review aid, never auto-redacted.'
+                      : undefined
+                  }
+                  checked={settings.categories[category]}
+                  onChange={(enabled) => {
+                    update({
+                      categories: { ...settings.categories, [category]: enabled },
+                      presetId: 'custom',
+                    });
+                  }}
+                />
+              ))}
+            </div>
+            <p className="mt-1.5 text-2xs text-ink-faint">
+              Disabled categories are not scanned at all. Your choices are saved locally and marked
+              as the Custom preset.
+            </p>
+          </div>
+        </div>
+      </Panel>
+
+      <Panel title="Scanning limits">
         <div className="px-4 py-2">
           <SelectInput
             label="Maximum prompt length"

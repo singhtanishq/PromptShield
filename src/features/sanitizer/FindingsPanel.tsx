@@ -46,6 +46,7 @@ export function FindingsPanel() {
     ignoreFinding,
     clearIgnored,
     allowlistValue,
+    removeFromAllowlist,
     decide,
     undecide,
     setDecisions,
@@ -108,7 +109,7 @@ export function FindingsPanel() {
   const onAllowlistConfirm = (): void => {
     if (allowlistCandidate === null) return;
     const value = text.slice(allowlistCandidate.range.start, allowlistCandidate.range.end);
-    allowlistValue(value);
+    allowlistValue(value, allowlistCandidate.preview);
     setAllowlistCandidate(null);
     showToast(
       'info',
@@ -256,12 +257,19 @@ export function FindingsPanel() {
               </span>
             )}
             {allowlist.length > 0 && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-2xs text-ink-faint"
-                title="Exact values in the session allowlist are excluded from new scans. Stored in memory only."
-              >
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2 py-0.5 text-2xs text-ink-faint">
                 <ShieldOff aria-hidden="true" className="h-3 w-3" />
-                {allowlist.length} allowlisted (session)
+                {allowlist.map((a) => (
+                  <button
+                    key={a.value}
+                    type="button"
+                    onClick={() => removeFromAllowlist(a.value)}
+                    title={`Re-enable detection for ${a.preview} (remove from session allowlist)`}
+                    className="inline-flex items-center gap-0.5 rounded-full border border-line bg-surface-2 px-1.5 font-mono hover:text-ink"
+                  >
+                    {a.preview} ×
+                  </button>
+                ))}
               </span>
             )}
           </div>

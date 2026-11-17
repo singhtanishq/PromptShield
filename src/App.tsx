@@ -4,8 +4,9 @@ import { SettingsProvider } from './app/settings';
 import { useRoute } from './app/router';
 import { ToastProvider } from './components/toast';
 import { SessionProvider } from './features/sanitizer/session';
+import { RulesProvider } from './features/rules/RulesProvider';
 import { SanitizerView } from './features/sanitizer/SanitizerView';
-import { RulesView } from './features/guides/RulesView';
+import { RulesView } from './features/rules/RulesView';
 import { SettingsView } from './features/settings/SettingsView';
 import { PrivacyView } from './features/privacy/PrivacyView';
 import { GuidesView } from './features/guides/GuidesView';
@@ -48,11 +49,13 @@ export default function App() {
   return (
     <SettingsProvider>
       <ToastProvider>
-        <SessionProvider>
-          <AppShell>
-            <Routes />
-          </AppShell>
-        </SessionProvider>
+        <RulesProvider>
+          <SessionProvider>
+            <AppShell>
+              <Routes />
+            </AppShell>
+          </SessionProvider>
+        </RulesProvider>
       </ToastProvider>
     </SettingsProvider>
   );

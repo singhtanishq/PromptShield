@@ -8,6 +8,10 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import { DETECTOR_CATEGORIES } from '../lib/detection/types';
+import type { DetectorCategory, ScanOptions } from '../lib/detection/types';
+import type { PresetId } from '../lib/rules/presets';
+import { PRESETS } from '../lib/rules/presets';
 
 /* eslint-disable react-refresh/only-export-components -- context modules export the provider together with its hook */
 
@@ -22,6 +26,10 @@ export interface PersistedSettings {
   reducedMotion: boolean;
   maxInputLength: number;
   localeHint: string;
+  /** Active scan preset; 'custom' after manual category/sensitivity tweaks. */
+  presetId: PresetId;
+  sensitivity: ScanOptions['sensitivity'];
+  categories: Record<DetectorCategory, boolean>;
 }
 
 export const DEFAULT_SETTINGS: PersistedSettings = {
@@ -30,6 +38,12 @@ export const DEFAULT_SETTINGS: PersistedSettings = {
   reducedMotion: false,
   maxInputLength: 50_000,
   localeHint: 'US',
+  presetId: 'general',
+  sensitivity: 'medium',
+  categories: Object.fromEntries(DETECTOR_CATEGORIES.map((c) => [c, true])) as Record<
+    DetectorCategory,
+    boolean
+  >,
 };
 
 export const MAX_INPUT_LENGTH_CHOICES = [10_000, 25_000, 50_000, 100_000, 200_000] as const;
@@ -51,6 +65,33 @@ function clampMaxLength(value: unknown, fallback: number): number {
   return allowed.includes(value) ? value : fallback;
 }
 
+function validateCategories(
+  value: unknown,
+  fallback: Record<DetectorCategory, boolean>,
+): Record<DetectorCategory, boolean> {
+  if (typeof value !== 'object' || value === null) return fallback;
+  const obj = value as Record<string, unknown>;
+  const merged = { ...fallback };
+  for (const key of Object.keys(fallback) as DetectorCategory[]) {
+    if (typeof obj[key] === 'boolean') merged[key] = obj[key] as boolean;
+  }
+  return merged;
+}
+
+function validatePresetId(value: unknown, fallback: PresetId): PresetId {
+  if (typeof value === 'string' && (PRESETS.some((p) => p.id === value) || value === 'custom')) {
+    return value as PresetId;
+  }
+  return fallback;
+}
+
+function validateSensitivity(
+  value: unknown,
+  fallback: ScanOptions['sensitivity'],
+): ScanOptions['sensitivity'] {
+  return value === 'low' || value === 'medium' || value === 'high' ? value : fallback;
+}
+
 function validate(raw: unknown): PersistedSettings {
   const fallback = { ...DEFAULT_SETTINGS };
   if (typeof raw !== 'object' || raw === null) return fallback;
@@ -64,6 +105,9 @@ function validate(raw: unknown): PersistedSettings {
     reducedMotion: typeof obj.reducedMotion === 'boolean' ? obj.reducedMotion : false,
     maxInputLength: clampMaxLength(obj.maxInputLength, fallback.maxInputLength),
     localeHint: typeof obj.localeHint === 'string' ? obj.localeHint.slice(0, 8) : 'US',
+    presetId: validatePresetId(obj.presetId, fallback.presetId),
+    sensitivity: validateSensitivity(obj.sensitivity, fallback.sensitivity),
+    categories: validateCategories(obj.categories, fallback.categories),
   };
 }
 

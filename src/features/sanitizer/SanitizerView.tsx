@@ -5,14 +5,12 @@ import { FindingsPanel } from './FindingsPanel';
 import { ScanControls } from './ScanControls';
 import { OutputPanel } from './OutputPanel';
 import { DiffView } from './DiffView';
-import type { Sensitivity } from './ScanControls';
 
 /**
  * Primary workspace. Wide screens: input + findings left, output right.
  * Narrow screens: stacked with the editor first.
  */
 export function SanitizerView() {
-  const [sensitivity, setSensitivity] = useState<Sensitivity>('medium');
   const [decodeEncoded, setDecodeEncoded] = useState(false);
 
   return (
@@ -35,12 +33,7 @@ export function SanitizerView() {
         </span>
       </div>
 
-      <ScanControls
-        sensitivity={sensitivity}
-        onSensitivityChange={setSensitivity}
-        decodeEncoded={decodeEncoded}
-        onDecodeEncodedChange={setDecodeEncoded}
-      />
+      <ScanControls decodeEncoded={decodeEncoded} onDecodeEncodedChange={setDecodeEncoded} />
 
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-5">

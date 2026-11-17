@@ -2,7 +2,13 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState } fro
 
 /* eslint-disable react-refresh/only-export-components -- context module exports provider + hook */
 import type { ReactNode } from 'react';
-import type { RedactionDecision, ScanResult, ScanOptions } from '../../lib/detection/types';
+import type {
+  RedactionDecision,
+  ScanResult,
+  ScanOptions,
+  UserRule,
+} from '../../lib/detection/types';
+import type { RuleValidationResultMessage } from '../../lib/workers/protocol';
 import type { ScanClient } from '../../lib/workers/client';
 import { createScanClient } from '../../lib/workers/client';
 import { PseudonymStore } from '../../lib/redaction/pseudonyms';
@@ -41,7 +47,7 @@ interface SessionContextValue {
   /** Finding ids marked "not sensitive" for this session. */
   ignoredIds: string[];
   /** Session-scoped allowlist of exact values (never persisted, never exported). */
-  allowlist: string[];
+  allowlist: AllowlistEntry[];
   /** Ordered redaction decisions applied on top of the current scan. */
   decisions: RedactionDecision[];
   canUndo: boolean;
@@ -54,7 +60,7 @@ interface SessionContextValue {
   clearScan: () => void;
   ignoreFinding: (findingId: string) => void;
   clearIgnored: () => void;
-  allowlistValue: (value: string) => void;
+  allowlistValue: (value: string, preview: string) => void;
   removeFromAllowlist: (value: string) => void;
   /** Record (or replace) the decision for one finding. */
   decide: (decision: RedactionDecision) => void;
@@ -69,6 +75,8 @@ interface SessionContextValue {
   reidentify: (value: string) => { text: string; replaced: number };
   /** Access the volatile pseudonym store for redaction application. */
   getPseudonymStore: () => PseudonymStore;
+  /** Run rule test cases in the worker (never on the main thread). */
+  validateRules: (rules: UserRule[]) => Promise<RuleValidationResultMessage['results']>;
   /** Clear everything in memory: text, scan, decisions, mapping, allowlist. */
   clearSession: () => void;
 }
@@ -77,12 +85,18 @@ const SessionContext = createContext<SessionContextValue | null>(null);
 
 const IDLE_SCAN: ScanSessionState = { status: 'idle', error: null, progress: null };
 
+/** An allowlisted exact value with its masked preview for UI display. */
+export interface AllowlistEntry {
+  value: string;
+  preview: string;
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [text, setTextState] = useState('');
   const [scan, setScan] = useState<ScanSessionState>(IDLE_SCAN);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [ignoredIds, setIgnoredIds] = useState<string[]>([]);
-  const [allowlist, setAllowlist] = useState<string[]>([]);
+  const [allowlist, setAllowlist] = useState<AllowlistEntry[]>([]);
   const [decisionState, setDecisionState] = useState<DecisionState>(EMPTY_DECISIONS);
   const [pseudonymVersion, setPseudonymVersion] = useState(0);
   const clientRef = useRef<ScanClient | null>(null);
@@ -169,12 +183,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setIgnoredIds([]);
   }, []);
 
-  const allowlistValue = useCallback((value: string): void => {
-    setAllowlist((prev) => (prev.includes(value) ? prev : [...prev, value]));
+  const allowlistValue = useCallback((value: string, preview: string): void => {
+    setAllowlist((prev) =>
+      prev.some((a) => a.value === value) ? prev : [...prev, { value, preview }],
+    );
   }, []);
 
   const removeFromAllowlist = useCallback((value: string): void => {
-    setAllowlist((prev) => prev.filter((v) => v !== value));
+    setAllowlist((prev) => prev.filter((a) => a.value !== value));
   }, []);
 
   const decide = useCallback((decision: RedactionDecision): void => {
@@ -234,6 +250,35 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return pseudonymsRef.current.reidentify(value);
   }, []);
 
+  const validateRules = useCallback(
+    async (rulesToTest: UserRule[]): Promise<RuleValidationResultMessage['results']> => {
+      const client = getClient();
+      const batches = await Promise.all(
+        rulesToTest.map(async (rule) => {
+          const results = await Promise.all(
+            rule.tests.map((test) =>
+              client
+                .validateRule(rule, test.text)
+                .then((all) => all.filter((r) => r.ruleId === rule.id))
+                .catch(() => [
+                  {
+                    ruleId: rule.id,
+                    testIndex: 0,
+                    expected: test.shouldMatch,
+                    matched: false,
+                    error: 'worker unavailable',
+                  },
+                ]),
+            ),
+          );
+          return results.flat().map((r, i) => ({ ...r, testIndex: i }));
+        }),
+      );
+      return batches.flat();
+    },
+    [getClient],
+  );
+
   const clearSession = useCallback((): void => {
     setTextState('');
     setResult(null);
@@ -274,6 +319,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       forgetPseudonyms,
       reidentify,
       getPseudonymStore: () => pseudonymsRef.current,
+      validateRules,
       clearSession,
     }),
     // pseudonymVersion is intentionally included: it forces the context value to

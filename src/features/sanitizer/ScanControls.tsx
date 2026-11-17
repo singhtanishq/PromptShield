@@ -2,6 +2,8 @@ import { ScanSearch, ShieldQuestion, XCircle } from 'lucide-react';
 import { Button, SelectInput, Switch } from '../../components/ui';
 import { useSession } from './session';
 import { useSettings } from '../../app/settings';
+import { useRules } from '../rules/RulesProvider';
+import { PRESETS } from '../../lib/rules/presets';
 import type { ScanOptions } from '../../lib/detection/types';
 
 export type Sensitivity = ScanOptions['sensitivity'];
@@ -13,22 +15,19 @@ const SENSITIVITY_HELP: Record<Sensitivity, string> = {
 };
 
 /**
- * Scan toolbar: explicit scan action with loading/cancel/error states plus the
- * two scan-time toggles (sensitivity, encoded-payload inspection opt-in).
+ * Scan toolbar: explicit scan action with loading/cancel/error states, preset
+ * selection (categories + sensitivity), and the encoded-payload opt-in.
  */
 export function ScanControls({
-  sensitivity,
-  onSensitivityChange,
   decodeEncoded,
   onDecodeEncodedChange,
 }: {
-  sensitivity: Sensitivity;
-  onSensitivityChange: (next: Sensitivity) => void;
   decodeEncoded: boolean;
   onDecodeEncodedChange: (next: boolean) => void;
 }) {
-  const { text, scan, startScan, cancelScan } = useSession();
-  const { settings } = useSettings();
+  const { text, scan, startScan, cancelScan, allowlist } = useSession();
+  const { settings, update } = useSettings();
+  const { rules } = useRules();
 
   const overLimit = text.length > settings.maxInputLength;
   const empty = text.length === 0;
@@ -56,21 +55,15 @@ export function ScanControls({
             size="lg"
             onClick={() =>
               void startScan({
-                sensitivity,
+                sensitivity: settings.sensitivity,
                 decodeEncodedContent: decodeEncoded,
                 localeHint: settings.localeHint,
                 maxInputLength: settings.maxInputLength,
-                categories: {
-                  contact: { enabled: true },
-                  personal: { enabled: true },
-                  financial: { enabled: true },
-                  secrets: { enabled: true },
-                  internal: { enabled: true },
-                  'prompt-risk': { enabled: true },
-                  custom: { enabled: true },
-                },
-                customRules: [],
-                allowlist: [],
+                categories: Object.fromEntries(
+                  Object.entries(settings.categories).map(([k, enabled]) => [k, { enabled }]),
+                ) as ScanOptions['categories'],
+                customRules: rules.filter((r) => r.enabled),
+                allowlist: allowlist.map((a) => a.value),
               })
             }
             disabled={disabled}
@@ -80,11 +73,32 @@ export function ScanControls({
           </Button>
         )}
 
+        <div className="w-56">
+          <SelectInput
+            label="Preset"
+            value={settings.presetId}
+            onChange={(v) => {
+              const preset = PRESETS.find((p) => p.id === v);
+              if (preset !== undefined) {
+                update({
+                  presetId: preset.id,
+                  sensitivity: preset.sensitivity,
+                  categories: preset.categories,
+                });
+              }
+            }}
+            options={[
+              ...PRESETS.map((p) => ({ value: p.id, label: p.label })),
+              { value: 'custom', label: 'Custom' },
+            ]}
+          />
+        </div>
+
         <div className="w-44">
           <SelectInput
             label="Sensitivity"
-            value={sensitivity}
-            onChange={(v) => onSensitivityChange(v as Sensitivity)}
+            value={settings.sensitivity}
+            onChange={(v) => update({ sensitivity: v as Sensitivity, presetId: 'custom' })}
             options={[
               { value: 'low', label: 'Low — fewer flags' },
               { value: 'medium', label: 'Medium — balanced' },
@@ -104,7 +118,7 @@ export function ScanControls({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-2xs text-ink-faint">{SENSITIVITY_HELP[sensitivity]}</p>
+        <p className="text-2xs text-ink-faint">{SENSITIVITY_HELP[settings.sensitivity]}</p>
         {scanning && progressPercent !== null && (
           <p className="text-2xs text-ink-muted" role="status">
             Scanning… {progressPercent}% (stage {scan.progress?.completed}/{scan.progress?.total})

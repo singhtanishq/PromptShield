@@ -19,6 +19,7 @@ import { CATEGORY_LABELS } from '../../lib/detection/types';
 import { lineColumnAt } from '../../lib/detection/spans';
 import {
   defaultReplacementFor,
+  maskPlaceholderFor,
   supportsPartialMask,
   untrustedQuoteFor,
 } from '../../lib/redaction/apply';
@@ -383,7 +384,11 @@ export function FindingsPanel() {
                       <Replace aria-hidden="true" className="h-3 w-3" />
                       {decision.mode === 'remove'
                         ? 'Will be removed'
-                        : `→ ${decision.replacement ?? decision.mode}`}
+                        : `→ ${
+                            decision.mode === 'mask'
+                              ? maskPlaceholderFor(d)
+                              : (decision.replacement ?? decision.mode)
+                          }`}
                     </span>
                   )}
                   <span className="ml-auto text-2xs text-ink-faint">{location(d)}</span>

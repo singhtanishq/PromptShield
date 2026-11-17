@@ -16,9 +16,9 @@
   --c-line-strong: 203 213 225;
   --c-ink: 15 23 42;
   --c-ink-muted: 71 85 105;
-  --c-ink-faint: 100 116 139;
-  --c-accent: 13 148 136; /* teal-600 */
-  --c-accent-strong: 15 118 110; /* teal-700 */
+  --c-ink-faint: 71 85 105; /* slate-600 — AA on surface tones */
+  --c-accent: 15 118 110; /* teal-700 — 4.5:1+ with white text (WCAG AA) */
+  --c-accent-strong: 13 84 93; /* teal-800 */
   --c-accent-soft: 204 251 241; /* teal-100 */
   --c-accent-ink: 19 78 74; /* teal-900 */
   --c-danger: 190 18 60; /* rose-700 */
@@ -33,7 +33,7 @@
   --c-sev-critical-soft: 255 228 230;
   --c-sev-high: 185 28 28;
   --c-sev-high-soft: 254 226 226;
-  --c-sev-medium: 161 98 7;
+  --c-sev-medium: 133 77 14; /* amber-800 — 4.5:1+ on soft bg */
   --c-sev-medium-soft: 254 243 199;
   --c-sev-low: 2 132 199;
   --c-sev-low-soft: 224 242 254;
@@ -50,8 +50,8 @@
   --c-line: 38 51 74;
   --c-line-strong: 51 65 92;
   --c-ink: 226 232 240;
-  --c-ink-muted: 148 163 184;
-  --c-ink-faint: 113 128 150;
+  --c-ink-muted: 165 179 199;
+  --c-ink-faint: 148 163 184; /* slate-400 — AA on dark surfaces */
   --c-accent: 45 212 191; /* teal-400 */
   --c-accent-strong: 94 234 212; /* teal-300 */
   --c-accent-soft: 19 78 74; /* teal-900 */

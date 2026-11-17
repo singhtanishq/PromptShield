@@ -21,10 +21,19 @@ export default defineConfig({
     {
       name: 'chromium-desktop',
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      testIgnore: [/responsive.*\.spec\.ts$/],
     },
     {
       name: 'chromium-mobile',
-      use: { ...devices['iPhone 13'], channel: 'chrome' },
+      // Mobile metrics with the Chromium engine (config cannot override ,
+      // so iPhone metrics are set explicitly instead of via the device preset).
+      use: {
+        channel: 'chrome',
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
+      testMatch: /responsive.*\.spec\.ts$/,
     },
   ],
   webServer: {

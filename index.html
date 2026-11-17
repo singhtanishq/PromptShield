@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PromptShield — Private AI Prompt Sanitizer</title>
+    <meta
+      name="description"
+      content="PromptShield inspects prompts in your browser, flags sensitive information and risky content, and helps you redact it locally before pasting it into an AI tool. No backend, no accounts, no prompt transmission."
+    />
+    <link rel="canonical" href="https://singhtanishq.github.io/PromptShield/" />
+    <meta name="robots" content="index,follow" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PromptShield" />
+    <meta property="og:title" content="PromptShield — Private AI Prompt Sanitizer" />
+    <meta
+      property="og:description"
+      content="Share the prompt. Not the sensitive bits. Inspect, redact, and export safer prompts — entirely in your browser."
+    />
+    <meta property="og:url" content="https://singhtanishq.github.io/PromptShield/" />
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="PromptShield — Private AI Prompt Sanitizer" />
+    <meta
+      name="twitter:description"
+      content="Share the prompt. Not the sensitive bits. Local-first prompt sanitization in your browser."
+    />
+    <meta name="theme-color" content="#f7f9fb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div style="max-width: 40rem; margin: 4rem auto; padding: 1.5rem; font-family: sans-serif">
+        <h1>PromptShield requires JavaScript</h1>
+        <p>
+          PromptShield is a local-first tool: your prompt text is analyzed entirely in your browser
+          by JavaScript. Nothing is sent to a server, so the application cannot function without it.
+          There is no server-side fallback by design — that is the privacy guarantee.
+        </p>
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

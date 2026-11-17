@@ -1,0 +1,19 @@
+{
+  "name": "PromptShield — Private AI Prompt Sanitizer",
+  "short_name": "PromptShield",
+  "description": "Inspect, redact, and export safer AI prompts entirely in your browser.",
+  "id": "/PromptShield/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

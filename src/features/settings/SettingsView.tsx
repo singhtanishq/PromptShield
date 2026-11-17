@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Contrast, Gauge, RotateCcw, Trash2, Zap } from 'lucide-react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
+import { Contrast, Download, FileUp, Gauge, RotateCcw, Trash2, Zap } from 'lucide-react';
 import { LOCALE_HINTS, MAX_INPUT_LENGTH_CHOICES, useSettings } from '../../app/settings';
 import { Button, Panel, RadioCards, SelectInput, Switch } from '../../components/ui';
 import { ConfirmDialog } from '../../components/dialog';
@@ -8,6 +9,9 @@ import { useSession } from '../sanitizer/session';
 import { PRESETS } from '../../lib/rules/presets';
 import { CATEGORY_LABELS, DETECTOR_CATEGORIES } from '../../lib/detection/types';
 import type { DetectorCategory } from '../../lib/detection/types';
+import { useRules } from '../rules/RulesProvider';
+import { buildSettingsExport, parseSettingsImport } from '../../lib/settings-io';
+import { downloadTextFile, ACCEPTED_IMPORT_TYPES } from '../../lib/files';
 
 /**
  * Detection & appearance settings. Only non-sensitive preferences are persisted
@@ -17,8 +21,13 @@ export function SettingsView() {
   const { settings, update, resetAll } = useSettings();
   const { showToast } = useToast();
   const { setText } = useSession();
+  const { rules, applyImport } = useRules();
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmClearSession, setConfirmClearSession] = useState(false);
+  const [importPreview, setImportPreview] = useState<ReturnType<typeof parseSettingsImport> | null>(
+    null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="flex flex-col gap-5">
@@ -127,6 +136,60 @@ export function SettingsView() {
         </div>
       </Panel>
 
+      <Panel
+        title="Export & import settings"
+        subtitle="Preferences and rule definitions only — never prompt content, findings, allowlists, or mappings."
+      >
+        <div className="flex flex-col gap-3 px-4 py-3">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              icon={<Download aria-hidden="true" className="h-4 w-4" />}
+              onClick={() => {
+                const json = buildSettingsExport(settings, rules);
+                downloadTextFile('promptshield-settings.json', json, 'application/json');
+                showToast('success', 'Settings and rule definitions exported (no prompt data).');
+              }}
+            >
+              Export settings & rules
+            </Button>
+            <Button
+              variant="secondary"
+              icon={<FileUp aria-hidden="true" className="h-4 w-4" />}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Import settings & rules
+            </Button>
+          </div>
+          <p className="text-2xs leading-snug text-ink-faint">
+            The export contains your saved preferences and custom rule definitions as versioned
+            JSON. Import validates the file first and previews exactly what will change before
+            anything is applied.
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_IMPORT_TYPES + ',application/json,.json'}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+              const file = event.target.files?.[0];
+              event.target.value = '';
+              if (file === undefined) return;
+              void file.text().then((text) => {
+                const result = parseSettingsImport(text);
+                if (!result.ok) {
+                  showToast('error', `Import failed: ${result.error}`);
+                  return;
+                }
+                setImportPreview(result);
+              });
+            }}
+            className="sr-only"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        </div>
+      </Panel>
+
       <Panel title="Data controls">
         <div className="flex flex-col gap-3 px-4 py-3">
           <p className="text-sm leading-relaxed text-ink-muted">
@@ -169,6 +232,49 @@ export function SettingsView() {
         }}
         onCancel={() => setConfirmClearSession(false)}
       />
+      <ConfirmDialog
+        open={importPreview !== null && importPreview.ok}
+        title="Apply imported settings?"
+        body={
+          importPreview !== null && importPreview.ok ? (
+            <>
+              <p>
+                The file contains valid preferences (theme:{' '}
+                <strong>{importPreview.settings.theme}</strong>, max prompt length:{' '}
+                <strong>{importPreview.settings.maxInputLength.toLocaleString()}</strong>, region:{' '}
+                <strong>{importPreview.settings.localeHint}</strong>, sensitivity:{' '}
+                <strong>{importPreview.settings.sensitivity}</strong>) and{' '}
+                <strong>{importPreview.rules.length} rule definition(s)</strong>.
+              </p>
+              {importPreview.warnings.length > 0 && (
+                <ul className="mt-2 list-disc pl-4">
+                  {importPreview.warnings.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-2">
+                Current settings with the same names will be overwritten. Rules are merged by id
+                (duplicates skipped). No prompt data is included in the file or applied here.
+              </p>
+            </>
+          ) : null
+        }
+        confirmLabel="Apply import"
+        onConfirm={() => {
+          if (importPreview !== null && importPreview.ok) {
+            update(importPreview.settings);
+            const { added, skipped } = applyImport(importPreview.rules);
+            showToast(
+              'info',
+              `Settings applied; ${added} rule(s) imported${skipped > 0 ? `, ${skipped} skipped (duplicates/invalid)` : ''}.`,
+            );
+          }
+          setImportPreview(null);
+        }}
+        onCancel={() => setImportPreview(null)}
+      />
+
       <ConfirmDialog
         open={confirmReset}
         title="Clear local settings?"

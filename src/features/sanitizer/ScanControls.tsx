@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ScanSearch, ShieldQuestion, XCircle } from 'lucide-react';
 import { Button, SelectInput, Switch } from '../../components/ui';
 import { useSession } from './session';
@@ -38,6 +39,33 @@ export function ScanControls({
       ? Math.round((scan.progress.completed / scan.progress.total) * 100)
       : null;
 
+  // Keyboard: Ctrl/Cmd+Enter runs a scan from anywhere in the workspace.
+  const scanNowRef = useRef<() => void>(() => {});
+  scanNowRef.current = () => {
+    if (disabled || scanning) return;
+    void startScan({
+      sensitivity: settings.sensitivity,
+      decodeEncodedContent: decodeEncoded,
+      localeHint: settings.localeHint,
+      maxInputLength: settings.maxInputLength,
+      categories: Object.fromEntries(
+        Object.entries(settings.categories).map(([k, enabled]) => [k, { enabled }]),
+      ) as ScanOptions['categories'],
+      customRules: rules.filter((r) => r.enabled),
+      allowlist: allowlist.map((a) => a.value),
+    });
+  };
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault();
+        scanNowRef.current();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-panel">
       <div className="flex flex-wrap items-center gap-3">
@@ -53,20 +81,9 @@ export function ScanControls({
           <Button
             variant="primary"
             size="lg"
-            onClick={() =>
-              void startScan({
-                sensitivity: settings.sensitivity,
-                decodeEncodedContent: decodeEncoded,
-                localeHint: settings.localeHint,
-                maxInputLength: settings.maxInputLength,
-                categories: Object.fromEntries(
-                  Object.entries(settings.categories).map(([k, enabled]) => [k, { enabled }]),
-                ) as ScanOptions['categories'],
-                customRules: rules.filter((r) => r.enabled),
-                allowlist: allowlist.map((a) => a.value),
-              })
-            }
+            onClick={() => scanNowRef.current()}
             disabled={disabled}
+            title="Scan the prompt (Ctrl/Cmd+Enter)"
             icon={<ScanSearch aria-hidden="true" className="h-4 w-4" />}
           >
             Scan prompt

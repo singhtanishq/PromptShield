@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { FlaskConical, ScanSearch, ShieldCheck } from 'lucide-react';
 import { InputPanel } from './InputPanel';
+import { FindingsPanel } from './FindingsPanel';
+import { ScanControls } from './ScanControls';
+import type { Sensitivity } from './ScanControls';
 import { EmptyState } from '../../components/ui';
 
 /**
@@ -7,6 +11,9 @@ import { EmptyState } from '../../components/ui';
  * Narrow screens: stacked with the editor first.
  */
 export function SanitizerView() {
+  const [sensitivity, setSensitivity] = useState<Sensitivity>('medium');
+  const [decodeEncoded, setDecodeEncoded] = useState(false);
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -27,27 +34,17 @@ export function SanitizerView() {
         </span>
       </div>
 
+      <ScanControls
+        sensitivity={sensitivity}
+        onSensitivityChange={setSensitivity}
+        decodeEncoded={decodeEncoded}
+        onDecodeEncodedChange={setDecodeEncoded}
+      />
+
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-5">
           <InputPanel />
-          <section
-            aria-labelledby="findings-heading"
-            className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-panel"
-          >
-            <div className="border-b border-line bg-surface-2 px-4 py-2.5">
-              <h2 id="findings-heading" className="text-sm font-semibold text-ink">
-                Findings
-              </h2>
-              <p className="mt-0.5 text-2xs text-ink-faint">
-                Suggestions only — you choose what to redact.
-              </p>
-            </div>
-            <EmptyState
-              icon={<ScanSearch aria-hidden="true" />}
-              title="No findings to review"
-              description="Load text above, then run a scan to see detected sensitive information and risk indicators grouped by type, severity, and confidence."
-            />
-          </section>
+          <FindingsPanel />
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">

@@ -178,6 +178,16 @@ audit, and the Playwright E2E suite on every push and pull request; the site dep
 to GitHub Pages from `main`. See [.github/workflows/ci.yml](.github/workflows/ci.yml)
 and [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
 
+### Deployment
+
+`.github/workflows/deploy.yml` builds, audits, and publishes `dist/` to GitHub
+Pages on every push to `main`. One-time prerequisite for a fresh repository:
+**Settings → Pages → Build and deployment → Source: “GitHub Actions”** (creating
+the Pages site requires an owner/admin action; GitHub's `GITHUB_TOKEN` can deploy
+to an existing site but cannot create it). After that one-time toggle, every push
+deploys automatically to
+[https://singhtanishq.github.io/PromptShield/](https://singhtanishq.github.io/PromptShield/).
+
 ## Documentation
 
 - [Privacy](docs/PRIVACY.md) — what is processed, stored, and never transmitted

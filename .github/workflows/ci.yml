@@ -67,6 +67,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Playwright's webServer launches vite preview, which serves dist/.
+      # Each job has a fresh runner, so the quality job's build is not
+      # available here. Build the production bundle before starting E2E.
       - name: Production build
         run: pnpm build
 
